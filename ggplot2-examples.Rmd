@@ -1,0 +1,348 @@
+---
+title: "ggplot2-examples"
+author: "aaron mamula"
+date: "8/4/2020"
+output: html_document
+---
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## How To
+
+First off, "Introductory Data Visualization" is kind of a lie. Most introductory data visualization lessons start with R's Base Graphics methods like ```plot()```. I'm skipping past that and jumping right into plotting with ```ggplot2()```. The reasons are simple:
+
+* I never use Base R plotting methods
+* Therefore, I'm not a good resource for information on Base R plots
+* I use ```ggplot2()``` exclusively for data visualization
+* Therefore, I'm a slightly above average resource for data visualization using ```ggplot()``` methods.
+
+I'm organizing this module as sort of a gallery. My intention here is to illustrate some useful and interesting graphics that can be constructed with some data and a little bit of ```ggplot()``` competency. 
+
+The ```ggplot()``` environment is not haphazard. It is based on a rigorous methodology for effective data display. I don't know very much about the information theory-type foundation of ```ggplot```. I use it primarily because I find the way that various components (data, aestetics, geometries) are combined to form a layer to be very intuitive. I also really like the ease with which ```ggplot``` combines layers to form a graphic. 
+
+If you are interested in the information theory underlying the ```ggplot``` plot approach I have included a tab with links in ```Resources-and-Readings.Rmd```.
+
+If you're more interested in learning ```ggplot``` by pushing a bunch of buttons in a semi-structured but still pretty ad-hoc manner then the rest of this Module should get you pretty fired up.
+
+## Libraries and Dependencies {.tabset}
+
+### Libraries/Packages
+```{r}
+# Load Libraries here
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+library(lubridate)
+library(viridis)
+library(here)
+
+library(plotly) # for interactive Bitcoin plot
+
+```
+
+### Data 
+
+```{r}
+# Daily Data from Kaggle on Weather in Australia 2007-2017.
+# https://www.kaggle.com/jsphyg/weather-dataset-rattle-package
+
+aus <- read.csv(here('data/weatherAUS.csv')) %>% 
+        mutate(date=as.Date(Date))
+
+can <- aus %>% mutate(month=month(Date),year=year(Date)) %>%
+         filter(Location=='Canberra' & year %in% c(2008,2012,2016))
+
+```
+
+```{r}
+# read in a sample of some VMS observation I have from groundfish trawlers
+vms <- read.csv(here('data/vms_sample.csv')) %>% 
+        mutate(date_time=as.POSIXct(date_time,format='%Y-%m-%d %H:%M:%S')) %>% 
+         filter(month(date_time)==9) %>% 
+           mutate(activity=ifelse(fishing==1,"fishing","not fishing"))  
+```
+
+```{r}
+# Load a bitcoin dataset from github
+bitcoin <- read.table("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/3_TwoNumOrdered.csv", header=T)
+
+# make the date a date-class variable
+bitcoin$date <- as.Date(bitcoin$date)
+
+# filter it a little
+bitcoin <- bitcoin %>% filter(year(date)>=2015)
+```
+
+```{r}
+# The Russian Troll Tweets data set from fivethirtyeight.com's GitHub site
+tweets <- read.csv(here('data/russian_troll_tweets.csv')) %>%
+            mutate(date=as.Date(date))
+
+```
+
+## ggplot() examples {.tabset}
+
+### Scatterplots
+
+Scatter plots were a pretty foundational part of my economics training. Most of us at some point probably very early in our Social Science journey were exposed to the scatter plot as the primary illustration of the technique of linear regression.
+
+```{r}
+# plain vanilla scatter plot of a linear relationship with noise
+beta <- 3
+x <- seq(0,1,by=0.01)
+y <- 2 + (beta*x) + rnorm(101)
+scatter.df <- data.frame(y=y,x=x)
+
+ggplot(data=scatter.df,aes(x=x,y=y)) + geom_point()
+```
+
+Things to note from the plot above:
+
+1. ```ggplot``` operates with data frames. This is somewhat distinct from Base R where we could produce a scatter plot using to vectors with something like ```plot(x=x,y=y)```. When using ```ggplot``` to make graphics we organize our data as a ```data.frame``` object before passing arguments to the plot command.
+
+2. The ```ggplot()``` method accepts the arguments ```data``` and ```aes()``` for aestetic. 
+
+3. Once we have told ```ggplot()``` what we data we want to plot (df) and how those data are to be related in the plot (x=x, y=y), we then tell it what kind of plot we want to display (```geom_point()```)
+
+To put some emphasis on this "layering" approach, observe the following:
+
+```{r}
+plot <- ggplot(scatter.df,aes(x=x,y=y))
+plot
+```
+
+Here we gave ```ggplot()``` the basic info it needs to prepare a plot space (some data and an aestetic) but haven't yet told it how we want the data displayed. So we add the line ```+ geom_point()```:
+
+```{r}
+plot + geom_point()
+```
+
+
+
+### Distributional Plots {.tabset}
+
+Here are a few distributional plots that I use frequently.
+
+#### Box Plots
+
+Basic box plot
+
+```{r}
+#plain vanilla boxplot with the ChickWeights data (R has a bunch of toy data sets that
+#   one can bring into a workspace with the method data())
+# read about these data sets here:
+#  https://stat.ethz.ch/R-manual/R-patched/library/datasets/html/00Index.html
+
+data(ChickWeight)
+ggplot(subset(ChickWeight,Time=10),aes(x=Diet,y=weight)) + geom_boxplot()
+```
+
+Box plot with overlaid observation counts. This is a useful accessory to boxplots as it lets us see the full range of grouped data in addition to distributional summary provided by the boxplot.
+
+```{r}
+ggplot(subset(ChickWeight,Time=10),aes(x=Diet,y=weight,fill=Diet)) + geom_boxplot(alpha=0.2) + 
+   geom_jitter(aes(colour=Diet))
+```
+
+Grouping variables in boxplots can be useful for things like visualizing changes in seasonal variation over long time horizons. The example below using the Australian Weather data set that I grabbed from Kaggle.
+
+```{r}
+# note here that "can" is the filtered version of the Australian Weather data set containing
+# observations for Canberra.
+ggplot(can,aes(x=factor(month),y=MaxTemp,fill=factor(year))) + geom_boxplot() + 
+      scale_fill_viridis_d(option='plasma', name="Year") + 
+      theme_tufte() + ylab("Max Temp (C)") + xlab("Month") 
+
+```
+
+#### Histograms
+
+A histogram is particular kind of bar chart and ```ggplot``` has a geometry method for constructing histograms. Histograms are often used to visualize the range and shape of a data series. Is it single-peaked or multi-modal? Does it look approximately normally distributed? etc.
+
+
+```{r}
+            
+ggplot(vms %>% filter(fishing==1 & speed < 50),aes(x=speed)) + geom_histogram()
+```
+
+Histograms can compare two distributions. In this case, my data have observations during which the vessel was actively trawling ('fishing') and observations for which the vessel was doing something other than fishing (transiting between fishing grounds, sitting still for various reasons). If we wanted to visualize the range of data involved with 'fishing' and 'not fishing' observations relative to the 'bottom depth' covariate it could be done like this:
+
+```{r}
+ggplot(vms,aes(x=depth.fm,fill=factor(activity))) + geom_histogram(alpha=0.3) + 
+    scale_fill_discrete(name="Activity") + theme_bw() + xlab("Bottom Depth (fm)")
+```
+
+#### Density Plots
+
+Another way to visualize the distribution of a variable is with density plots.
+
+```{r}
+# A simple density plot
+ggplot(vms %>% filter(fishing==1 & speed < 50),aes(x=speed)) + geom_density()
+```
+
+A cool way to compare two distributions is with a mirrored density plot:
+
+```{r mirrored_density_plot}
+#https://www.r-graph-gallery.com/density_mirror_ggplot2.html
+library(hrbrthemes)
+# Note this mirrored density plot really hangs with large data...
+# also the VMS speed data has long tails which I cut off 
+#  totally for aestetic purposes
+
+vms <- vms %>% select(date_time,fishing,speed,long,lat) %>% 
+          filter(speed < 30)
+
+# Chart
+ggplot(vms, aes(x=speed) ) +
+  # Top
+  geom_density(data=subset(vms,fishing==1), aes(x = speed, y = ..density..), fill="#69b3a2" ) +
+  geom_label( aes(x=10, y=0.25, label="Fishing"), color="#69b3a2") +
+  # Bottom
+  geom_density(data=subset(vms,fishing==0), aes(x = speed, y = -..density..), fill= "#404080") +
+  geom_label( aes(x=15, y=-0.15, label="Not fishing"), color="#404080") +
+  ggtitle("Trawling speeds (km/hr) derived from VMS polls") +
+  theme_ipsum() +
+  xlab("Vessel Speed (km/hr)") 
+```
+
+### Time-Series Plots
+
+I'm taking this example straight from the [R Graph Gallery Page](https://www.r-graph-gallery.com/163-interactive-area-chart-plotly.html). It's an interactive time-series plot of bitcoin prices.
+
+```{r plotly_example, warning=FALSE}
+
+# Usual area chart
+p <- bitcoin %>%  
+  ggplot( aes(x=date, y=value)) +
+    geom_area(fill="#69b3a2", alpha=0.5) +
+    geom_line(color="#69b3a2") +
+    ylab("bitcoin price ($)") +
+    scale_y_continuous(breaks=c(0,5000,10000,15000,20000),
+                       labels=c("0","5","10","15","20K")) +
+    theme_ipsum()
+
+# Turn it interactive with ggplotly
+p <- ggplotly(p)
+p
+```
+
+
+### Just 4 Fun
+
+From [fivethirtyeight.com, *Why we're sharing 3 million russian troll tweets](https://fivethirtyeight.com/features/why-were-sharing-3-million-russian-troll-tweets/)
+
+Original data from Clemson University: [Troll Factories: The Internet Research Agency and State-Sponsored Agenda Building](http://pwarren.people.clemson.edu/Linvill_Warren_TrollFactory.pdf)
+
+Like most data people I really enjoy the data journalism that [fivethirtyeight.com](www.fivethirtyeight.com) cranks out. I particularly enjoy the graphics that they come up with. I thought it would cool to try and reproduce the look of a fivethirtyeight plot. This Russian Troll Tweet one looked like the easiest and the data were pretty easy to get via the [fivethirtyeight Russian Troll Tweet GitHub repository](https://github.com/fivethirtyeight/russian-troll-tweets).
+
+```{r russian_troll_data, eval=F}
+ira1 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_1.csv")
+ira2 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_2.csv")
+ira3 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_3.csv")
+ira4 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_4.csv")
+ira5 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_5.csv")
+ira6 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_6.csv")
+ira7 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_7.csv")
+ira8 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_8.csv")
+ira9 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_9.csv")
+ira10 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_10.csv")
+ira11 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_11.csv")
+ira12 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_12.csv")
+ira13 <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/russian-troll-tweets/master/IRAhandle_tweets_13.csv")
+
+tweets <- data.frame(date=c(ira1$publish_date,
+                                ira2$publish_date,
+                                ira3$publish_date,
+                                ira4$publish_date,
+                                ira5$publish_date,
+                                ira6$publish_date,
+                                ira7$publish_date,
+                                ira8$publish_date,
+                                ira9$publish_date,
+                                ira10$publish_date,
+                                ira11$publish_date,
+                                ira12$publish_date,
+                                ira13$publish_date),
+                     tweet=1) %>%
+              mutate(date=as.Date(date,format="%m/%d/%Y")) %>%
+              group_by(date) %>% summarise(tweet=sum(tweet,na.rm=T))
+```
+
+```{r russian_troll_tweets}
+
+tweets <- tweets %>% filter(date>'2015-06-19' & date < '2017-12-31')
+ggplot(tweets,aes(x=date,y=tweet)) + geom_bar(stat='identity',color="tomato") + 
+  annotate("text", x = as.Date("2016-07-01"), y = 15000, 
+                    label = "OCT. 6, 2016",
+                    fontface =2,
+                    hjust=1) +
+  annotate("text", x = as.Date("2016-07-01"), y = 12000, 
+                    label = "Spike in troll activity\nright before WikiLeaks\nreleases Clinton\ncampaign emails",
+                    fontface =1,
+                    hjust=1) +
+  geom_segment(data=data.frame(xstart=as.Date('2016-08-01'),xend=as.Date('2016-10-01'),ystart=12500,yend=12500),
+               aes(x=xstart,xend=xend,y=ystart,yend=yend)) + 
+  geom_curve(aes(x = x2, y = y2, xend = x1, yend = y1), 
+             data = data.frame(x1=as.Date('2016-11-08'),
+                               x2=as.Date('2017-01-01'),
+                               y1=tweets$tweet[which(tweets$date=='2016-11-08')],
+                               y2=tweets$tweet[which(tweets$date=='2016-11-08')]+2000),
+             arrow = arrow(length = unit(0.03, "npc"))) +
+  annotate("text",x=as.Date("2017-01-02"),y=10000,
+                            label='atop(bold("NOV. 8, 2016"),"Election Day")',parse=T,hjust=0) +
+  annotate("text",x=as.Date("2017-08-30"),y=15800,
+                            label="SUMMER 2017",
+                            fontface=2,hjust=1) +
+  annotate("text",x=as.Date("2017-08-30"),y=14100,
+                            label="High season for\nRight Trolls",
+                            fontface=1,hjust=1) +
+  scale_colour_fivethirtyeight() + 
+  ggtitle(label = "Russian Troll Tweets by Day",
+              subtitle = "Nearly 3 million tweets sent by trolls associated with the\nInternet Research Agency") +
+  scale_y_continuous(breaks=c(0,5000,10000,15000),
+        labels=c("0", "5", "10","15K")) +
+  theme_fivethirtyeight() 
+```
+
+FiveThirtyEight uses a font called [Decima Mono](https://www.typewolf.com/site-of-the-day/fonts/decima-mono). Honestly, I googled around to see if I could use this font in a ggplot plot...but I didn't make much progress and ultimately gave up.
+
+### Adding Layers to a ggplot
+
+Something I really like about ```ggplot``` is how easily new features can be added to an existing plot. For example, if we want to add a least squares fit to the scatter plot, we can simply add another geometry to the original scatter plot.
+
+To illustrate this, let's start with the basic scatter plot:
+
+```{r}
+plot <- ggplot(scatter.df,aes(x=x,y=y)) + geom_point()
+#note nothing is printed here....just setting up the ggplot() object
+```
+
+```{r}
+# now add a column in our data frame is a linear combination of other columns
+scatter.df <- scatter.df %>% mutate(y_line = 2 + (beta*x))
+
+# we can add this line to the ggplot object "plot" by using the "+" operator 
+plot + geom_point() + geom_line(data=scatter.df,aes(x=x,y=y_line),color="blue")
+```
+
+And here is a little bonus: ```ggplot2()``` has a method for fitting a line to data. To fit a least squares line to noisy data we can use ```geom_smooth(method=lm)```: 
+
+```{r}
+plot + geom_point() + geom_smooth(method=lm)
+```
+
+### Modifying the Plot Space
+
+Here is an example of a couple common enhancements I often end up adding to plots:
+
+1. named x and y axes
+2. formatted axis tick labels
+3. a nicer theme - I use the ```ggthemes``` package to get access to a bunch of canned themes.
+
+```{r}
+plot + geom_point() + geom_smooth(method=lm) + 
+   theme_tufte() + xlab("Independent Variable") + 
+     ylab("Dependent Variable") + 
+       theme(axis.text.x=element_text(angle=45))
+```

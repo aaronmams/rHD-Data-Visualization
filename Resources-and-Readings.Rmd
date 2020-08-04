@@ -1,0 +1,25 @@
+---
+title: "Resources-and-Readings"
+author: "aaron mamula"
+date: "8/4/2020"
+output: html_document
+---
+
+Once in a while you'll see a question posted to Stack Overflow or some other code list serve that's met with an RTFM (read the *&^%# manual) response from a salty programmer. So here's the ggplot2 manual:
+
+[The ggplot2 manual](https://cran.r-project.org/web/packages/ggplot2/ggplot2.pdf)
+[The ggplot2 page in the tidyverse]([https://ggplot2.tidyverse.org/])
+
+Resources like the library documentation on CRAN are generally not great for questions like
+
+* [Can I use math type in a text annotation?](https://www.benjaminackerman.com/post/2019-03-08-equation_labels/)
+
+But if your question is *how do I make the dots on my scatter plot blue instead of black?* You'll probably get some salty programmers screaming RTFM at you.
+
+## The "grammar of graphics"
+
+1. [The ggplot2 summary from the tidyverse page](https://ggplot2.tidyverse.org/)
+2. [This helpful bookdown on the grammar of graphics](https://ramnathv.github.io/pycon2014-r/visualize/ggplot2.html)
+3. [Hadley Wickham's article, *A layered grammar of graphics* from *Journal of Computational and Graphical Statistics*](https://www.tandfonline.com/doi/abs/10.1198/jcgs.2009.07098)
+
+
