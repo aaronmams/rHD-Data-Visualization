@@ -13,7 +13,7 @@ Here's what's happening in this module:
 
 Working with the Census Bureau ACS data I'm going to create an informative map using the spatial data package *sf*. The exercise will proceed more-or-less like this:
 
-* get the shapefile for CDP boundaries from the Census TIGER Data Mart
+* get a shapefile for county boundaries for California from the Census TIGER Data Mart
 * join the boundry shapefile with the data series 
 * create a "heatmap" of educational attainment by county
 
