@@ -9,7 +9,7 @@ output: md_document
 
 The primary objective of this lesson is to show how to plot/chart data. 
 
-```Skill-1-Spreadsheet-Data.Rmd``` and ```Skill-2-Data-Wrangling.Rmd``` focused on getting real life data into an R workspace and making it "useable." This lesson will illustrate some methods for visualizing your data.
+In the [Data-Import-Export](https://github.com/aaronmams/rHD-Data-Import-Export) and [Data-Wrangling](https://github.com/aaronmams/rHD-Data-Wrangling) focused on getting real life data into an R workspace and making it "useable." This lesson will illustrate some methods for visualizing your data.
 
 This lesson contains both introductory and non-introductory content. 
 
@@ -17,12 +17,17 @@ This lesson contains both introductory and non-introductory content.
 
 ### Code 
 
-This R code for this lesson is contained in the following files:
+This R code for this lesson is contained in the following files.
+
+#### Skills
 
 1. ```ggplot-examples.Rmd```
-2. ```mapping-census-data.Rmd```
 
 ```ggplot-examples.Rmd``` should be a very approachable lesson appropriate for basically everybody. 
+
+#### Recipes
+
+1. ```mapping-census-data.Rmd```
 
 ```mapping-census-data.Rmd``` has some non-introductory content. There's nothing terrifying in there but it does deal a little bit with spatial data types, GIS data, and extracting JSON data from the web so I'd probably peg it somewhere between novice and intermediate.
 
