@@ -1,0 +1,116 @@
+---
+title: "Covid-19-CA-Counties"
+author: "aaron mamula"
+date: "6/2/2020"
+output: html_document
+---
+
+The objective here is to make some informative maps loosely guided by the LA Times Covid-Tracker which I really like:
+
+https://www.latimes.com/projects/california-coronavirus-cases-tracking-outbreak/
+
+I'm going to illustrate a static map using the ```sf``` package and ```ggplot``` with ```geom_sf``` to display a map of California counties colored by the number of new Covid-19 cases in the past 2 weeks.
+
+# {.tabset .tabset-fade .tabset-pills}
+
+## Packages
+
+```{r}
+library(dplyr)
+library(data.table)
+library(sf)
+library(ggplot2)
+library(ggthemes)
+library(ggrepel)
+library(here)
+```
+
+## Data Wrangling
+
+The data wrangling steps are:
+
+1. Get the data on daily Covid-19 cases by county in the U.S. These data are available in a few places but I'm getting them from a GitHub repository that the NY Times set up.
+
+2. Get a shapefile with county boundaries. I use the Census Bureau's TIGER Data Mart for this
+
+3. I reorganize the Covid-19 case data. There are certainly more elegant ways to do this...what I have here is a little hacky but it works.
+
+These data wrangling steps are executed in the file ```R/data-clean.R```
+
+```{r}
+source(here('R/data-clean.R'))
+```
+
+
+## A Static County Map for CA
+
+For this example, I'm making a static county-level map for California where the fill colors are defined by number of new Covid-19 cases in each county for the trailing 14-day period. A few things to note:
+
+* First, I normalized the "new 14-day cases" variable by population (more specifically I divide by Population/100,000).
+* Next, I binned the "normalized trailing 14-day case count" in order to create a little more color contrast.
+
+```{r}
+# for aestetics I'm going to reduce the variance by binning the data
+ca.lines <- ca.lines %>% mutate(cases_per_100k_D = ifelse(cases_per_100k == 0 ,0,
+                                                   ifelse(cases_per_100k>0 & cases_per_100k<21,"1-20",
+                                                   ifelse(cases_per_100k>20 & cases_per_100k<41,"21-40",
+                                                   ifelse(cases_per_100k>40 & cases_per_100k<61,"41-60",
+                                                   ifelse(cases_per_100k>60 & cases_per_100k<81,"61-80",
+                                                   ifelse(cases_per_100k>80 & cases_per_100k<101,"81-100",
+                                                  ifelse(cases_per_100k>100,">100",NA))))))))
+
+ca.lines$cases_per_100k_D <- factor(ca.lines$cases_per_100k_D,
+                                    levels=c("0","1-20","21-40","41-60","61-80","81-100",">100"))
+
+county.list <- ca.lines %>% filter(county %in% c("Kings","Imperial","Los Angeles"))
+ggplot(ca.lines) + geom_sf(aes(fill=cases_per_100k_D)) + 
+   #geom_sf_label_repel(data=county.list,aes(label = county),
+    #                    force = 100, nudge_x = -2, seed = 10) + 
+  theme_tufte() + scale_fill_brewer(name="Cases per\n100,000 residents") +
+  ggtitle("New Covid-19 Cases in the last 14 days")
+```
+
+Let's add an informative bar chart. I sometimes find the aestetics of Choropleth maps challenging. Specifically, I find it difficult to add baseline info, or spatial context, in a way that doesn't compromise the minimalist aestetic. In the map above I like the clean display of change in cases over space...but I don't like that I can't really label the counties without crowding the visual.
+
+If I want to convey more granular information about specific counties, I can add a bar chart to the mix. This is a nice way to allow readers to dive a little deeper into the general spatial patterns they can see on the map:  
+```{r}
+# display cases per 100k residents with population 
+
+# reorder county names by cases
+ggplot(ca.cases %>% filter(new_2wk>50),aes(x=reorder(county,cases_per_100k),y=cases_per_100k)) + geom_bar(stat='identity') + coord_flip() + 
+  ylab("New Cases in the Last 14 Days per 100,000 Residents") + xlab("")  + 
+  theme_tufte()  + ggtitle(expression(atop("Reported New Covid-19 Cases by CA County 7/20/2020-8/3/2020", atop(italic("Counties reporting > 10 new cases only"), ""))))
+```
+
+## An Interactive Map using Tmap/Leaflet
+
+I can sort of combine the cool relative spatial elements of the choropleth map with the granular detail of the bar chart into a single visual using an interactive map. One way to make interactive maps is with the ```tmap``` and ```leaflet``` packages.
+
+```{r}
+# try an example with tm/leaflet
+library(tmap)
+library(tmaptools)
+
+# using this tutorial as a guide:
+# http://zevross.com/blog/2018/10/02/creating-beautiful-demographic-maps-in-r-with-the-tidycensus-and-tmap-packages/#part-2-creating-beautiful-maps-with-tmap
+
+# for this example I want to add one more dimension:
+# whether or not the new 2 week case count increased or decreased
+# from the previous week
+
+#still need to mess with the legend title to make it more informative
+
+carto <- "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}{r}.png"
+
+
+my_map <- tm_basemap(carto) +
+  tm_shape(ca.lines) + 
+  tm_borders(col="azure2") + 
+  tm_bubbles('cases_per_100k',
+             col="diff",
+             palette=c("coral2","aquamarine3","grey"),
+              popup.vars=c("County: " = "county", "New Cases per 100k Residents: " = "cases_per_100k")) 
+
+
+tmap_leaflet(my_map)
+```
