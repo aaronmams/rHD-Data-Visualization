@@ -7,9 +7,9 @@ output: html_document
 
 # {.tabset .tabset-fade .tabset-pills}
 
-## How To
+## Intro + Background
 
-First off, "Introductory Data Visualization" is kind of a lie. Most introductory data visualization lessons start with R's Base Graphics methods like ```plot()```. I'm skipping past that and jumping right into plotting with ```ggplot2()```. The reasons are simple:
+Most introductory data visualization lessons start with R's Base Graphics methods like ```plot()```. I'm skipping past that and jumping right into plotting with ```ggplot2()```. The reasons are simple:
 
 * I never use Base R plotting methods
 * Therefore, I'm not a good resource for information on Base R plots
@@ -116,7 +116,6 @@ Here we gave ```ggplot()``` the basic info it needs to prepare a plot space (som
 ```{r}
 plot + geom_point()
 ```
-
 
 
 ### Distributional Plots {.tabset}
