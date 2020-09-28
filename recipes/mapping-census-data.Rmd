@@ -39,6 +39,8 @@ library(here)
 
 county.lines <- st_read(here('data/CA_Counties/CA_Counties_TIGER2016.shp'))
 str(county.lines)
+
+api.key <- read.csv(here('data/census-api-key.csv'))
 ```
 
 The thing to note from above is that we have an data frame-looking thing that is object class *sf* with a variety of spatial data type identifiers. The [Simple Features Package](https://r-spatial.github.io/sf/articles/sf1.html) really simplifies working with spatial data because it organizes things in a familiar data-frame looking way.
@@ -76,7 +78,8 @@ This section draws on the earlier less on using APIs to extract data. Here I'm u
 data.series.name <- 'DP02_0064PE'
 
 # my API key
-key <- "key=f5a32f694a14b28acf7301f4972eaab8551eafda"
+key <- paste("key=",api.key$key,sep="")
+
 # the base url for Detailed Tables for the 2018 ACS 5-year
 base <- "https://api.census.gov/data/2018/acs/acs5/profile?get=NAME,"
 # geo parameters
