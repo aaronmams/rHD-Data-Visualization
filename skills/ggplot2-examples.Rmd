@@ -184,25 +184,25 @@ A cool way to compare two distributions is with a mirrored density plot:
 
 ```{r mirrored_density_plot}
 #https://www.r-graph-gallery.com/density_mirror_ggplot2.html
-library(hrbrthemes)
+#library(hrbrthemes)
 # Note this mirrored density plot really hangs with large data...
 # also the VMS speed data has long tails which I cut off 
 #  totally for aestetic purposes
 
-vms <- vms %>% select(date_time,fishing,speed,long,lat) %>% 
-          filter(speed < 30)
+#vms <- vms %>% select(date_time,fishing,speed,long,lat) %>% 
+#          filter(speed < 30)
 
 # Chart
-ggplot(vms, aes(x=speed) ) +
+#ggplot(vms, aes(x=speed) ) +
   # Top
-  geom_density(data=subset(vms,fishing==1), aes(x = speed, y = ..density..), fill="#69b3a2" ) +
-  geom_label( aes(x=10, y=0.25, label="Fishing"), color="#69b3a2") +
+#  geom_density(data=subset(vms,fishing==1), aes(x = speed, y = ..density..), fill="#69b3a2" ) +
+#  geom_label( aes(x=10, y=0.25, label="Fishing"), color="#69b3a2") +
   # Bottom
-  geom_density(data=subset(vms,fishing==0), aes(x = speed, y = -..density..), fill= "#404080") +
-  geom_label( aes(x=15, y=-0.15, label="Not fishing"), color="#404080") +
-  ggtitle("Trawling speeds (km/hr) derived from VMS polls") +
-  theme_ipsum() +
-  xlab("Vessel Speed (km/hr)") 
+#  geom_density(data=subset(vms,fishing==0), aes(x = speed, y = -..density..), fill= "#404080") +
+#  geom_label( aes(x=15, y=-0.15, label="Not fishing"), color="#404080") +
+#  ggtitle("Trawling speeds (km/hr) derived from VMS polls") +
+#  theme_ipsum() +
+#  xlab("Vessel Speed (km/hr)") 
 ```
 
 ### Time-Series Plots
@@ -210,6 +210,7 @@ ggplot(vms, aes(x=speed) ) +
 I'm taking this example straight from the [R Graph Gallery Page](https://www.r-graph-gallery.com/163-interactive-area-chart-plotly.html). It's an interactive time-series plot of bitcoin prices.
 
 ```{r plotly_example, warning=FALSE}
+library(hrbrthemes)
 
 # Usual area chart
 p <- bitcoin %>%  
@@ -313,7 +314,7 @@ Something I really like about ```ggplot``` is how easily new features can be add
 To illustrate this, let's start with the basic scatter plot:
 
 ```{r}
-plot <- ggplot(scatter.df,aes(x=x,y=y)) + geom_point()
+plot <- ggplot(scatter.df,aes(x=x,y=y))
 #note nothing is printed here....just setting up the ggplot() object
 ```
 
